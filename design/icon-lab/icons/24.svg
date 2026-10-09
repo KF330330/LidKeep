@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <defs>
+    <linearGradient id="sync-bg" x1="30" y1="8" x2="220" y2="248" gradientUnits="userSpaceOnUse"><stop stop-color="#F2FBFC"/><stop offset="1" stop-color="#CDE7ED"/></linearGradient>
+    <linearGradient id="sync-mark" x1="72" y1="54" x2="187" y2="199" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#244458"/><stop offset="1" stop-color="#122D43"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="url(#sync-bg)"/>
+  <path d="M63 76a20 20 0 0 1 40 0v35h50V91a20 20 0 0 1 40 0v89a20 20 0 0 1-40 0v-31h-50v24a20 20 0 0 1-40 0Z" fill="url(#sync-mark)"/>
+</svg>

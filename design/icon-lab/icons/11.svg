@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <defs>
+    <linearGradient id="graphite" x1="36" y1="8" x2="213" y2="248" gradientUnits="userSpaceOnUse"><stop stop-color="#3D444E"/><stop offset="1" stop-color="#161B22"/></linearGradient>
+    <linearGradient id="silver" x1="128" y1="50" x2="128" y2="196" gradientUnits="userSpaceOnUse"><stop stop-color="#FCFDFE"/><stop offset=".46" stop-color="#B4BEC8"/><stop offset="1" stop-color="#EEF1F4"/></linearGradient>
+    <linearGradient id="lid" x1="128" y1="115" x2="128" y2="146" gradientUnits="userSpaceOnUse"><stop stop-color="#EEF2F6"/><stop offset="1" stop-color="#AAB6C2"/></linearGradient>
+    <linearGradient id="base" x1="128" y1="145" x2="128" y2="163" gradientUnits="userSpaceOnUse"><stop stop-color="#98A7B4"/><stop offset="1" stop-color="#DFE7ED"/></linearGradient>
+    <linearGradient id="light" x1="169" y1="102" x2="181" y2="116" gradientUnits="userSpaceOnUse"><stop stop-color="#CEFFD9"/><stop offset="1" stop-color="#56DD99"/></linearGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="url(#graphite)"/>
+  <rect x="9" y="9" width="238" height="238" rx="53" stroke="#F3F8FF" stroke-opacity=".13" stroke-width="2"/>
+  <path d="M184 89A72 72 0 1 0 196 159" stroke="#060A10" stroke-opacity=".4" stroke-width="15" stroke-linecap="round" transform="translate(0 5)"/>
+  <path d="M184 84A72 72 0 1 0 196 154" stroke="url(#silver)" stroke-width="13" stroke-linecap="round"/>
+  <path d="M64 115A66 66 0 0 1 163 68" stroke="#FFF" stroke-opacity=".25" stroke-width="2" stroke-linecap="round"/>
+  <path d="M79 117H169C173 117 176 120 177 124L185 145H63L71 124C72 120 75 117 79 117Z" fill="#090F18" fill-opacity=".35" transform="translate(0 7)"/>
+  <path d="M80 113H168C173 113 176 116 178 121L185 140H63L70 121C72 116 75 113 80 113Z" fill="url(#lid)"/>
+  <path d="M69 140H179" stroke="#6F8090" stroke-width="2"/>
+  <path d="M62 142H186V148C186 155 179 161 172 161H76C69 161 62 155 62 148Z" fill="url(#base)"/>
+  <path d="M110 142H138V145C138 148 135 150 132 150H116C113 150 110 148 110 145Z" fill="#718291"/>
+  <path d="M79 115H169" stroke="#FFF" stroke-opacity=".75" stroke-width="2" stroke-linecap="round"/>
+  <path d="M73 157H175" stroke="#F1F7FB" stroke-opacity=".8" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="190" cy="119" r="17" fill="#171F25"/>
+  <circle cx="190" cy="119" r="10" fill="url(#light)"/>
+  <circle cx="187" cy="116" r="3" fill="#E3FFF0" fill-opacity=".65"/>
+</svg>

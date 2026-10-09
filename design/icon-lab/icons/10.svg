@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <defs>
+    <linearGradient id="ivory" x1="35" y1="16" x2="213" y2="244" gradientUnits="userSpaceOnUse"><stop stop-color="#FFFDF6"/><stop offset="1" stop-color="#EDE5D9"/></linearGradient>
+    <linearGradient id="paper" x1="56" y1="61" x2="165" y2="176" gradientUnits="userSpaceOnUse"><stop stop-color="#FFAF88"/><stop offset=".55" stop-color="#F47C62"/><stop offset="1" stop-color="#E4574E"/></linearGradient>
+    <linearGradient id="fold" x1="103" y1="119" x2="165" y2="189" gradientUnits="userSpaceOnUse"><stop stop-color="#E76353"/><stop offset="1" stop-color="#C83F44"/></linearGradient>
+    <linearGradient id="edge" x1="115" y1="142" x2="207" y2="102" gradientUnits="userSpaceOnUse"><stop stop-color="#FFAC82"/><stop offset="1" stop-color="#FFD3A3"/></linearGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="url(#ivory)"/>
+  <rect x="9" y="9" width="238" height="238" rx="53" stroke="#FFF" stroke-opacity=".75" stroke-width="2"/>
+  <path d="m46 112 97-45 66 97-91 36Z" fill="#9F5F4A" fill-opacity=".12"/>
+  <path d="m46 104 100-43 65 88-95 41Z" fill="url(#paper)"/>
+  <path d="m46 104 70 86 1-55Z" fill="url(#fold)"/>
+  <path d="m46 104 100-43-29 74Z" fill="#FFA685"/>
+  <path d="m146 61 65 88-94-14Z" fill="url(#paper)"/>
+  <path d="m116 190 95-41-94-14Z" fill="#D65149"/>
+  <path d="m117 135 60-51 34 65-95 41Z" fill="url(#edge)"/>
+  <path d="m117 135 60-51-21 64Z" fill="#FFF0CD"/>
+  <path d="m156 148 55 1-95 41Z" fill="#F78D66"/>
+  <path d="m177 84 34 65-55-1Z" fill="#FFBC90"/>
+  <path d="m48 104 97-41" stroke="#FFE1BF" stroke-width="2" stroke-linecap="round"/>
+  <path d="m118 135 58-49" stroke="#FFF8E5" stroke-width="2" stroke-linecap="round"/>
+  <path d="m116 190 40-42 53 1" stroke="#BC4C43" stroke-opacity=".14" stroke-width="2" stroke-linejoin="round"/>
+</svg>

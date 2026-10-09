@@ -1,0 +1,10 @@
+{
+  "id": "M03",
+  "name": "无限",
+  "source": "menu/03.svg",
+  "displaySizePoints": 18,
+  "statusItem": "square, icon only",
+  "confirmedBy": "user",
+  "installed": true,
+  "installedVersion": "1.1.3"
+}

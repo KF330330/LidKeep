@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <defs>
+    <linearGradient id="cosmos" x1="43" y1="15" x2="202" y2="248" gradientUnits="userSpaceOnUse"><stop stop-color="#5D5DE0"/><stop offset=".48" stop-color="#4942AA"/><stop offset="1" stop-color="#2A265F"/></linearGradient>
+    <linearGradient id="orbit" x1="55" y1="192" x2="208" y2="55" gradientUnits="userSpaceOnUse"><stop stop-color="#8D96FF" stop-opacity="0"/><stop offset=".5" stop-color="#AAB6FF" stop-opacity=".62"/><stop offset="1" stop-color="#E1EAFF"/></linearGradient>
+    <linearGradient id="starA" x1="69" y1="58" x2="124" y2="144" gradientUnits="userSpaceOnUse"><stop stop-color="#FFF8D5"/><stop offset="1" stop-color="#F7C793"/></linearGradient>
+    <linearGradient id="starB" x1="155" y1="113" x2="197" y2="187" gradientUnits="userSpaceOnUse"><stop stop-color="#E4FAFF"/><stop offset="1" stop-color="#99CAFF"/></linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientTransform="translate(89 83) rotate(55) scale(130)" gradientUnits="userSpaceOnUse"><stop stop-color="#9B91FF" stop-opacity=".35"/><stop offset="1" stop-color="#8880FF" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="url(#cosmos)"/>
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="url(#glow)"/>
+  <rect x="9" y="9" width="238" height="238" rx="53" stroke="#D8DFFF" stroke-opacity=".17" stroke-width="2"/>
+  <path d="M49 167C34 208 80 220 139 185 198 150 229 100 207 79" stroke="#171347" stroke-opacity=".25" stroke-width="8" stroke-linecap="round" transform="translate(0 4)"/>
+  <path d="M49 167C34 208 80 220 139 185 198 150 229 100 207 79" stroke="url(#orbit)" stroke-width="6" stroke-linecap="round"/>
+  <path d="m96 58 12 28 30 12-30 12-12 31-12-31-29-12 29-12Z" fill="#262053" fill-opacity=".22" transform="translate(0 6)"/>
+  <path d="m96 54 12 29 30 12-30 12-12 31-12-31-29-12 29-12Z" fill="url(#starA)"/>
+  <path d="m96 54 12 29-12 12-12-12Z" fill="#FFFAE8" fill-opacity=".7"/>
+  <path d="m96 95 12 12-12 31Z" fill="#DBA2A0" fill-opacity=".26"/>
+  <path d="m174 116 11 23 24 10-24 10-11 26-10-26-24-10 24-10Z" fill="url(#starB)"/>
+  <path d="m174 116 11 23-11 10-10-10Z" fill="#F3FFFF" fill-opacity=".75"/>
+  <path d="m174 149 11 10-11 26Z" fill="#7DA5F0" fill-opacity=".45"/>
+  <path d="m152 62 3 7 7 3-7 3-3 8-3-8-7-3 7-3Z" fill="#B4B9FF"/>
+  <circle cx="72" cy="161" r="4" fill="#C3CFFF"/>
+  <circle cx="191" cy="71" r="3" fill="#DDE2FF" fill-opacity=".65"/>
+</svg>

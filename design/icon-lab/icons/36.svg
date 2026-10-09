@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <rect
+    x="8" y="8" width="240" height="240" rx="54"
+    fill="#E9E0F3"/>
+  <g transform="rotate(-12 128 128)">
+    <path
+      d="M128 128C108 107 99 98 80 98C48 98 48 158 80 158C99 158 108 149 128 128C148 107 157 98 176 98C208 98 208 158 176 158C157 158 148 149 128 128Z"
+      stroke="#503C6D"
+      stroke-width="29"
+      stroke-linejoin="round"/>
+    <path
+      d="M113 112C123 122 133 134 143 144"
+      stroke="#503C6D" stroke-width="29" stroke-linecap="round"/>
+  </g>
+</svg>

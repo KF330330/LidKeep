@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+<defs>
+<linearGradient id="bg" x1="28" y1="8" x2="225" y2="256" gradientUnits="userSpaceOnUse"><stop stop-color="#34375f"/><stop offset="1" stop-color="#151b38"/></linearGradient>
+<linearGradient id="metal" x1="70" y1="57" x2="183" y2="204" gradientUnits="userSpaceOnUse"><stop stop-color="#fff"/><stop offset=".45" stop-color="#e7f5f4"/><stop offset="1" stop-color="#9eccc4"/></linearGradient>
+<linearGradient id="mint" x1="66" y1="75" x2="186" y2="181" gradientUnits="userSpaceOnUse"><stop stop-color="#ddffb8"/><stop offset="1" stop-color="#44e0b4"/></linearGradient>
+<linearGradient id="moon" x1="92" y1="56" x2="175" y2="180" gradientUnits="userSpaceOnUse"><stop stop-color="#fff7dc"/><stop offset="1" stop-color="#bcb5ec"/></linearGradient>
+</defs>
+<rect x="8" y="8" width="240" height="240" rx="54" fill="url(#bg)"/>
+<rect x="9" y="9" width="238" height="238" rx="53" stroke="#fff" stroke-opacity=".15" stroke-width="2"/>
+<path d="M155 53C127 81 134 118 164 132C181 140 197 137 209 129C208 170 175 196 136 191C96 186 73 150 80 113C87 79 120 51 155 53Z" fill="#090d24" opacity=".3" transform="translate(0 6)"/>
+<path d="M148 50C124 78 131 112 159 126C176 134 191 130 201 123C201 161 170 187 134 182C97 177 75 145 82 109C89 77 117 52 148 50Z" fill="url(#moon)"/>
+<path d="M62 173H179L190 186H55Z" fill="#9ca8dd"/>
+<path d="M55 186H190L181 192H65Z" fill="#6377b5"/>
+<path d="M189 62L192 71L201 74L192 77L189 86L186 77L177 74L186 71Z" fill="#f8ecca"/>
+<circle cx="62" cy="113" r="3" fill="#a9b6e4"/>
+</svg>

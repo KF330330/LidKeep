@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <defs>
+    <linearGradient id="rotor-bg" x1="28" y1="8" x2="222" y2="248" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFDF7"/><stop offset="1" stop-color="#F0EADF"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="url(#rotor-bg)"/>
+  <path d="M118 114C95 116 74 100 67 82 61 66 70 53 84 52 106 50 126 73 135 100 138 109 132 116 124 115Z" fill="#F57656"/>
+  <path d="M118 114C95 116 74 100 67 82 61 66 70 53 84 52 106 50 126 73 135 100 138 109 132 116 124 115Z" transform="rotate(120 128 128)" fill="#EA664D"/>
+  <path d="M118 114C95 116 74 100 67 82 61 66 70 53 84 52 106 50 126 73 135 100 138 109 132 116 124 115Z" transform="rotate(240 128 128)" fill="#DB5748"/>
+</svg>

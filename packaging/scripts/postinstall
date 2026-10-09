@@ -1,0 +1,46 @@
+#!/bin/bash
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+. "$SCRIPT_DIR/management-common.sh"
+require_root
+[ "${3:-/}" = / ] || fail '只能安装至当前启动磁盘。'
+check_layout
+enter_maintenance
+for item in "$SUPPORT/identity.json" "$SUPPORT/management-common.sh" "$SUPPORT/uninstall.sh"; do
+  check_root_item "$item"
+done
+materialize_local_executable "$APP/Contents/MacOS/LidKeep"
+/usr/bin/codesign --verify --strict "$APP"
+/usr/bin/codesign --verify --strict "$HELPER"
+restore_owned_state
+require_normal_sleep
+# Preserve the original install failure even if cleanup fails, without recursive traps.
+rollback() {
+  local install_status="$1" rollback_status
+  trap - ERR
+  /bin/echo "LidKeep: 后台启动失败（退出码 ${install_status}），正在回退。" >&2
+  set +e
+  (
+    set -e
+    enter_maintenance
+    # A failed first restoration leaves loaded services available for recovery.
+    restore_owned_state
+    stop_services
+    restore_owned_state
+  )
+  rollback_status=$?
+  if [ "$rollback_status" -ne 0 ]; then
+    /bin/echo 'LidKeep: 回退未完成；已保留维护标记和安装文件。请根据上述错误修复后重试安装。' >&2
+  else
+    /bin/echo 'LidKeep: 已恢复休眠设置并停止本工具的两个服务；维护标记和安装文件保留，可重试安装。' >&2
+  fi
+  exit "$install_status"
+}
+trap 'rollback "$?"' ERR
+/bin/rm -f "$STATE/maintenance"
+/bin/launchctl enable system/local.rl.lidkeep.watchdog
+/bin/launchctl enable system/local.rl.lidkeep.daemon
+/bin/launchctl bootstrap system "$WATCHDOG"
+/bin/launchctl bootstrap system "$DAEMON"
+trap - ERR
+/bin/echo 'LidKeep 已安装。请打开 /Applications/LidKeep.app 完成短时合盖验收。'

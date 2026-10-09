@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <defs>
+    <linearGradient id="relay-bg" x1="40" y1="8" x2="215" y2="248" gradientUnits="userSpaceOnUse"><stop stop-color="#433550"/><stop offset="1" stop-color="#2B2338"/></linearGradient>
+    <linearGradient id="relay-violet" x1="71" y1="176" x2="118" y2="53" gradientUnits="userSpaceOnUse"><stop stop-color="#B6A1DF"/><stop offset="1" stop-color="#E4D5FA"/></linearGradient>
+    <linearGradient id="relay-peach" x1="147" y1="75" x2="179" y2="195" gradientUnits="userSpaceOnUse"><stop stop-color="#FFE1BC"/><stop offset="1" stop-color="#F3BD98"/></linearGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="url(#relay-bg)"/>
+  <path d="M115 62v80c0 20-10 32-27 32s-27-12-27-30v-13" stroke="url(#relay-violet)" stroke-width="29" stroke-linecap="round"/>
+  <path d="M141 194v-80c0-20 10-32 27-32s27 12 27 30v13" stroke="url(#relay-peach)" stroke-width="29" stroke-linecap="round"/>
+</svg>

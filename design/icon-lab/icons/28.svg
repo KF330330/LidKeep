@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+<defs><linearGradient id="silk" x1="52" y1="91" x2="194" y2="177" gradientUnits="userSpaceOnUse"><stop stop-color="#fcbb8a"/><stop offset=".38" stop-color="#ffe6ba"/><stop offset=".57" stop-color="#dc98db"/><stop offset="1" stop-color="#9f7bda"/></linearGradient>
+<linearGradient id="cross" x1="110" y1="105" x2="146" y2="153" gradientUnits="userSpaceOnUse"><stop stop-color="#fff1d6"/><stop offset="1" stop-color="#e9b4d8"/></linearGradient></defs>
+<rect x="8" y="8" width="240" height="240" rx="54" fill="#382744"/>
+<path d="M128 128C108 109 97 85 77 85C51 85 43 106 43 128C43 152 56 171 79 171C99 171 112 146 128 128C145 110 159 85 179 85C204 85 213 106 213 128C213 152 200 171 177 171C157 171 147 149 128 128Z" stroke="url(#silk)" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M109 105L147 153" stroke="#382744" stroke-width="38"/>
+<path d="M109 105L147 153" stroke="url(#cross)" stroke-width="32"/>
+</svg>

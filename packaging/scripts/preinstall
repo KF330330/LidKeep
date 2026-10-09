@@ -1,0 +1,15 @@
+#!/bin/bash
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+. "$SCRIPT_DIR/management-common.sh"
+require_root
+[ "${3:-/}" = / ] || fail '只能安装至当前启动磁盘。'
+[ "$(/usr/sbin/sysctl -n hw.optional.arm64 2>/dev/null)" = 1 ] || fail '仅支持 Apple Silicon Mac。'
+MACOS_VERSION=$(/usr/bin/sw_vers -productVersion)
+[ "${MACOS_VERSION%%.*}" -ge 14 ] || fail '需要 macOS 14 或更新版本。'
+check_layout
+enter_maintenance
+restore_owned_state
+stop_services
+restore_owned_state
+# The marker remains until the new payload has been verified by postinstall.

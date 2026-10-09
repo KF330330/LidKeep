@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <defs>
+    <linearGradient id="gap-bg" x1="35" y1="8" x2="222" y2="248" gradientUnits="userSpaceOnUse"><stop stop-color="#292C32"/><stop offset="1" stop-color="#171A20"/></linearGradient>
+    <linearGradient id="gap-light" x1="56" y1="128" x2="202" y2="128" gradientUnits="userSpaceOnUse"><stop stop-color="#FFB569"/><stop offset="1" stop-color="#F57B43"/></linearGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="url(#gap-bg)"/>
+  <rect x="43" y="73" width="157" height="46" rx="23" fill="#FFF6E5"/>
+  <rect x="56" y="123" width="144" height="10" rx="5" fill="url(#gap-light)"/>
+  <rect x="56" y="137" width="157" height="46" rx="23" fill="#E8DECC"/>
+</svg>
