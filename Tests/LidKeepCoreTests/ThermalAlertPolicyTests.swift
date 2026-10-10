@@ -78,6 +78,28 @@ final class ThermalAlertPolicyTests: XCTestCase {
         XCTAssertNotNil(policy.observe(now: 2305, .elevated))
     }
 
+    func testLateDeliveryFromClearedEpisodeDoesNotMarkNextEpisode() {
+        var policy = ThermalAlertPolicy()
+        XCTAssertEqual(run(&policy, .elevated, from: 0, through: 300), [300])
+        XCTAssertNil(policy.observe(now: 305, .cleared))
+        XCTAssertEqual(run(&policy, .elevated, from: 310, through: 400), [])
+        policy.delivered(at: 400) // Callback for the first episode arrives during the second.
+        XCTAssertEqual(run(&policy, .elevated, from: 405, through: 2195), [], "Interval counts from the accepted post")
+        XCTAssertNotNil(policy.observe(now: 2200, .elevated))
+        policy.delivered(at: 2200)
+        XCTAssertEqual(run(&policy, .elevated, from: 2205, through: 7200), [])
+    }
+
+    func testLateDeliveryAfterResetDoesNotMarkNextEpisode() {
+        var policy = ThermalAlertPolicy()
+        XCTAssertEqual(run(&policy, .elevated, from: 0, through: 300), [300])
+        policy.reset()
+        XCTAssertEqual(run(&policy, .elevated, from: 305, through: 400), [])
+        policy.delivered(at: 400)
+        XCTAssertEqual(run(&policy, .elevated, from: 405, through: 2195), [])
+        XCTAssertNotNil(policy.observe(now: 2200, .elevated))
+    }
+
     func testClassifyOnlyClearsOnConfirmedFacts() {
         typealias Case = (lid: Bool?, fresh: Bool, awake: Bool, thermal: ThermalLevel,
                           expected: ThermalAlertPolicy.Observation)

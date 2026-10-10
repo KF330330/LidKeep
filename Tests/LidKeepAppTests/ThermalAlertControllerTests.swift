@@ -171,6 +171,29 @@ final class ThermalAlertControllerTests: XCTestCase {
         XCTAssertFalse(try XCTUnwrap(messages.last).enabled)
     }
 
+    func testRestartKeepsThirtyMinuteIntervalAndLastReminderText() throws {
+        let controller = makeController()
+        controller.start()
+        drain()
+        tick(controller, 61) { self.status() }
+        XCTAssertEqual(poster.posts.count, 1)
+        let delivered = try XCTUnwrap(defaults.object(forKey: "thermalAlertLastDelivered") as? Date)
+        simulation.advance(delivered.addingTimeInterval(60).timeIntervalSince(simulation.date))
+        let soon = makeController()
+        soon.start()
+        drain()
+        XCTAssertTrue(try XCTUnwrap(messages.last).text.contains("上次热状态提醒"))
+        tick(soon, 61) { self.status() }
+        XCTAssertEqual(poster.posts.count, 1, "A restart one minute later keeps the interval")
+        simulation.advance(delivered.addingTimeInterval(31 * 60).timeIntervalSince(simulation.date))
+        let later = makeController()
+        later.start()
+        drain()
+        XCTAssertTrue(try XCTUnwrap(messages.last).text.contains("上次热状态提醒"))
+        tick(later, 61) { self.status() }
+        XCTAssertEqual(poster.posts.count, 2)
+    }
+
     func testTestNotificationBypassesPolicyAndKeepsAutomaticInterval() throws {
         simulation.lid = false
         let controller = makeController()
@@ -179,6 +202,7 @@ final class ThermalAlertControllerTests: XCTestCase {
         controller.sendTest()
         drain(rounds: 3)
         XCTAssertEqual(poster.posts.map(\.title), ["LidKeep 测试通知"])
+        XCTAssertNil(defaults.object(forKey: "thermalAlertLastDelivered"), "Test posts are not reminder history")
         simulation.lid = true
         tick(controller, 61) { self.status() }
         XCTAssertEqual(poster.posts.map(\.title), ["LidKeep 测试通知", "合盖运行时系统热状态略高"])
