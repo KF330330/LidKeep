@@ -15,6 +15,8 @@ public struct ThermalAlertPolicy {
     private var pending = false           // a post is in flight
     private var lastFailure: Double?
     private var lastAlert: Double?        // last accepted notification
+    private var episode = 0               // advances whenever an episode is confirmed over or reset
+    private var pendingEpisode: Int?      // episode of the in-flight post
 
     public init() {}
 
@@ -35,6 +37,7 @@ public struct ThermalAlertPolicy {
         lastObservation = now
         switch observation {
         case .cleared:
+            if episodeActive { episode += 1 }
             episodeActive = false
             episodeAlerted = false
             elevatedSince = nil
@@ -52,6 +55,7 @@ public struct ThermalAlertPolicy {
             if let lastAlert, now - lastAlert < Self.minimumIntervalSeconds { return nil }
             if let lastFailure, now - lastFailure < Self.retrySeconds { return nil }
             pending = true
+            pendingEpisode = episode
             return duration
         }
     }
@@ -60,16 +64,23 @@ public struct ThermalAlertPolicy {
         pending = false
         lastAlert = now
         lastFailure = nil
-        if episodeActive { episodeAlerted = true }
+        // A late callback from an earlier episode must not mark the current one as alerted.
+        if episodeActive && pendingEpisode == episode { episodeAlerted = true }
+        pendingEpisode = nil
     }
 
     public mutating func failed(at now: Double) {
         pending = false
         lastFailure = now
+        pendingEpisode = nil
     }
+
+    /// Restores the last accepted notification after an app restart, on this policy's clock.
+    public mutating func restoreLastAlert(at time: Double) { lastAlert = time }
 
     /// Setting turned off: forget the episode; keep lastAlert so the 30-minute interval still holds.
     public mutating func reset() {
+        episode += 1
         elevatedSince = nil
         lastObservation = nil
         episodeActive = false

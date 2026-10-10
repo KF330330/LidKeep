@@ -4,18 +4,24 @@ import ServiceManagement
 
 final class SettingsWindow: NSWindowController, NSWindowDelegate {
     var saveThresholds: ((Double, Double, @escaping (String?) -> Void) -> Void)?
+    var thermalAlertChanged: ((Bool) -> Void)?
+    var sendTestAlert: (() -> Void)?
     private let stopField = NSTextField(string: "10")
     private let resumeField = NSTextField(string: "20")
     private let loginCheckbox = NSButton(checkboxWithTitle: "登录时启动 LidKeep", target: nil, action: nil)
     private let loginFeedback = NSTextField(wrappingLabelWithString: "")
     private let feedback = NSTextField(wrappingLabelWithString: "")
     private let saveButton = NSButton(title: "保存电量设置", target: nil, action: nil)
+    private let thermalAlertCheckbox = NSButton(checkboxWithTitle: "合盖运行时热状态「略高」持续 5 分钟，发送系统通知",
+                                                target: nil, action: nil)
+    private let thermalAlertFeedback = NSTextField(wrappingLabelWithString: "")
+    private let testAlertButton = NSButton(title: "发送测试通知", target: nil, action: nil)
     private var dirty = false
     private var saving = false
     private var connected = false
 
     init() {
-        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 470, height: 400),
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 470, height: 540),
                               styleMask: [.titled, .closable], backing: .buffered, defer: false)
         window.title = "LidKeep 设置"
         window.isReleasedWhenClosed = false
@@ -44,6 +50,17 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         feedback.textColor = .secondaryLabelColor
         feedback.preferredMaxLayoutWidth = 414
         body.addArrangedSubview(feedback)
+        // Notification controls do not depend on the power service connection.
+        thermalAlertCheckbox.target = self
+        thermalAlertCheckbox.action = #selector(changeThermalAlert)
+        body.addArrangedSubview(thermalAlertCheckbox)
+        thermalAlertFeedback.textColor = .secondaryLabelColor
+        thermalAlertFeedback.preferredMaxLayoutWidth = 414
+        thermalAlertFeedback.maximumNumberOfLines = 4
+        body.addArrangedSubview(thermalAlertFeedback)
+        testAlertButton.target = self
+        testAlertButton.action = #selector(testAlert)
+        body.addArrangedSubview(testAlertButton)
         window.contentView!.addSubview(body)
         NSLayoutConstraint.activate([
             body.leadingAnchor.constraint(equalTo: window.contentView!.leadingAnchor, constant: 28),
@@ -113,6 +130,16 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         }
         loginFeedback.toolTip = loginFeedback.stringValue
     }
+
+    func updateThermalAlert(enabled: Bool, message: String) {
+        thermalAlertCheckbox.state = enabled ? .on : .off
+        thermalAlertFeedback.stringValue = message
+        thermalAlertFeedback.toolTip = message
+    }
+
+    @objc private func changeThermalAlert() { thermalAlertChanged?(thermalAlertCheckbox.state == .on) }
+
+    @objc private func testAlert() { sendTestAlert?() }
 
     @objc private func fieldChanged() { dirty = true }
 
