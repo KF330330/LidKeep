@@ -11,25 +11,36 @@ protocol AlertPosting: AnyObject {
     func post(title: String, body: String, completion: @escaping (String?) -> Void)
 }
 
+/// Shows an on-screen reminder. Must not block the caller (the heartbeat runs on the same queue).
+protocol AlertPresenting: AnyObject {
+    func present(title: String, body: String)
+}
+
 /// Main-queue only. Lid-closed fair-thermal reminder; never changes power settings.
+/// The dialog is the only on-screen reminder; the system notification is only a Notification Center record.
 final class ThermalAlertController {
     var onChange: ((_ enabled: Bool, _ message: String) -> Void)?
     private(set) var enabled: Bool
     private let defaults: UserDefaults
     private let poster: AlertPosting
+    private let presenter: AlertPresenting
     private let lidReading: () -> Bool?
     private let uptime: () -> Double
     private let wallClock: () -> Date
+    private let schedule: (TimeInterval, @escaping () -> Void) -> Void
     private var policy = ThermalAlertPolicy()
     private var permission = AlertPermission.notDetermined
     private var lastDeliveredText: String?
 
-    init(defaults: UserDefaults = .standard, poster: AlertPosting,
+    init(defaults: UserDefaults = .standard, poster: AlertPosting, presenter: AlertPresenting,
          lidReading: @escaping () -> Bool?,
          uptime: @escaping () -> Double = { Monotonic.now },
-         wallClock: @escaping () -> Date = Date.init) {
-        self.defaults = defaults; self.poster = poster; self.lidReading = lidReading
-        self.uptime = uptime; self.wallClock = wallClock
+         wallClock: @escaping () -> Date = Date.init,
+         schedule: @escaping (TimeInterval, @escaping () -> Void) -> Void = { delay, work in
+             DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
+         }) {
+        self.defaults = defaults; self.poster = poster; self.presenter = presenter; self.lidReading = lidReading
+        self.uptime = uptime; self.wallClock = wallClock; self.schedule = schedule
         enabled = defaults.object(forKey: "thermalAlertEnabled") as? Bool ?? true
         // Keep the 30-minute interval across app restarts; a clock set backwards counts as recent.
         if let date = defaults.object(forKey: "thermalAlertLastDelivered") as? Date {
@@ -63,22 +74,25 @@ final class ThermalAlertController {
         let observation = ThermalAlertPolicy.classify(lidClosed: lidReading(), statusFresh: fresh,
                                                       keepingAwake: keepingAwake, thermal: status?.thermal ?? .unknown)
         guard let duration = policy.observe(now: uptime(), observation) else { return }
+        let now = wallClock()
         let start = DateFormatter.localizedString(from: wallClock().addingTimeInterval(-duration),
                                                   dateStyle: .none, timeStyle: .short)
         let body = "已持续约 \(Int(duration / 60)) 分钟（自 \(start) 起）。LidKeep 仍保持电脑运行，尚未达到高温保护；建议检查散热或减少后台任务。"
+        presenter.present(title: "合盖运行时系统热状态略高",
+                          body: body + "\n\n提醒时间：" + DateFormatter.localizedString(from: now, dateStyle: .none, timeStyle: .short))
+        // The dialog is the reminder: record it now; the notification below is never retried.
+        policy.delivered(at: uptime())
+        defaults.set(now, forKey: "thermalAlertLastDelivered")
+        lastDeliveredText = Self.deliveredText(now)
+        publish()
         poster.post(title: "合盖运行时系统热状态略高", body: body) { [weak self] error in
             DispatchQueue.main.async {
                 guard let self else { return }
                 if let error {
-                    self.policy.failed(at: self.uptime())
-                    self.onChange?(self.enabled, "热状态提醒发送失败，5 分钟后若仍偏高会重试：\(error)")
+                    self.publish(note: "本次通知中心记录未送达：\(error)")
                 } else {
-                    self.policy.delivered(at: self.uptime())
                     // Success implies the poster saw an authorized notification setting.
                     self.permission = .allowed
-                    let now = self.wallClock()
-                    self.defaults.set(now, forKey: "thermalAlertLastDelivered")
-                    self.lastDeliveredText = Self.deliveredText(now)
                     self.publish()
                 }
             }
@@ -97,6 +111,8 @@ final class ThermalAlertController {
 
     /// Bypasses the policy and never affects the automatic reminder interval.
     func sendTest() {
+        presenter.present(title: "LidKeep 测试提醒",
+                          body: "合盖运行时热状态「略高」持续 5 分钟，LidKeep 会这样弹窗提醒你，并在通知中心留一条静音记录。")
         poster.currentPermission { [weak self] permission in
             DispatchQueue.main.async {
                 guard let self else { return }
@@ -106,6 +122,13 @@ final class ThermalAlertController {
                 }
             }
         }
+    }
+
+    /// Lets the user lock and close the lid before the test dialog appears; not reminder history.
+    func sendDelayedTest(after seconds: TimeInterval = 60) {
+        publish(showPermission: true,
+                note: "已安排 \(Int(seconds)) 秒后弹出测试提醒：可先锁屏并合盖，之后开盖解锁检查弹窗是否在屏幕上。")
+        schedule(seconds) { [weak self] in self?.sendTest() }
     }
 
     private func postTest(_ permission: AlertPermission) {
@@ -131,19 +154,20 @@ final class ThermalAlertController {
     }
 
     // Test results report the permission even while automatic reminders are off.
-    private func publish(showPermission: Bool = false) {
+    private func publish(showPermission: Bool = false, note: String? = nil) {
         var message: String
         if !enabled && !showPermission {
             message = "已关闭热状态提醒。"
         } else {
             switch permission {
-            case .allowed: message = "已允许通知。提醒为静音通知，合盖时屏幕关闭，开盖后可在通知中心查看。"
-            case .denied: message = "通知权限未开启：请到「系统设置 → 通知 → LidKeep 合盖运行」允许通知。"
-            case .notDetermined: message = "尚未获得通知权限；勾选开关后系统会询问。"
-            case .failed(let reason): message = "无法使用系统通知：\(reason)"
+            case .allowed: message = "已允许通知。提醒会在屏幕中央弹窗（无提示音），并在通知中心留一条记录。"
+            case .denied: message = "通知权限未开启：仍会弹窗提醒，但通知中心不留记录；如需记录，请到「系统设置 → 通知 → LidKeep 合盖运行」允许通知。"
+            case .notDetermined: message = "尚未获得通知权限（不影响弹窗提醒）；勾选开关后系统会询问。"
+            case .failed(let reason): message = "无法使用系统通知（不影响弹窗提醒）：\(reason)"
             }
         }
-        if let lastDeliveredText { message += "\n上次热状态提醒：\(lastDeliveredText)（已送达通知中心）" }
+        if let note { message += "\n" + note }
+        if let lastDeliveredText { message += "\n上次热状态提醒：\(lastDeliveredText)（已弹窗提醒）" }
         onChange?(enabled, message)
     }
 
@@ -199,6 +223,7 @@ final class SystemAlertPoster: NSObject, AlertPosting, UNUserNotificationCenterD
 
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification,
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        completionHandler([.banner, .list])
+        // The dialog is the visible reminder; the notification is only a Notification Center record.
+        completionHandler([.list])
     }
 }

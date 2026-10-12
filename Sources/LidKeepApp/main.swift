@@ -60,13 +60,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
         }
-        // Created at launch only, so tests never touch the system notification center.
-        let thermalAlerts = ThermalAlertController(poster: SystemAlertPoster(), lidReading: DiagnosticsController.lidClosed)
+        // Created at launch only, so tests never touch the notification center or create windows.
+        let thermalAlerts = ThermalAlertController(poster: SystemAlertPoster(), presenter: ThermalAlertDialog(), lidReading: DiagnosticsController.lidClosed)
         thermalAlerts.onChange = { [weak self] enabled, message in
             self?.settings.updateThermalAlert(enabled: enabled, message: message)
         }
         settings.thermalAlertChanged = { [weak thermalAlerts] enabled in thermalAlerts?.setEnabled(enabled) }
         settings.sendTestAlert = { [weak thermalAlerts] in thermalAlerts?.sendTest() }
+        settings.sendDelayedTestAlert = { [weak thermalAlerts] in thermalAlerts?.sendDelayedTest() }
         self.thermalAlerts = thermalAlerts
         thermalAlerts.start()
         // Keep the lease sender out of App Nap without asserting against display or system sleep.
@@ -322,7 +323,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func showHelp() {
         let alert = NSAlert()
         alert.messageText = "LidKeep · 合盖运行"
-        alert.informativeText = "首次使用请运行 LidKeep 安装包，并完成菜单中的 3 分钟合盖测试。只有验收通过才会开启长期保活。\n\n低于停止电量或系统高温时，后台先解除保活，再请求休眠。用户唤醒后不会反复被强制休眠；达到恢复电量且温度正常 60 秒后恢复。手动关闭状态会保留。\n\n合盖运行时若系统热状态「略高」持续 5 分钟，会发一条静音系统通知（两次至少间隔 30 分钟），可在设置中关闭。\n\n退出 App 或心跳失联后，后台会解除保活（最迟约 30 秒，外加检查间隔）。菜单中的状态来自后台；“未连接”表示当前状态未知。\n\n合盖运行需要持续联网，并应保持通风。程序不控制 AI 会话，也不会自动解决网络中断、授权等待或请求失败。"
+        alert.informativeText = "首次使用请运行 LidKeep 安装包，并完成菜单中的 3 分钟合盖测试。只有验收通过才会开启长期保活。\n\n低于停止电量或系统高温时，后台先解除保活，再请求休眠。用户唤醒后不会反复被强制休眠；达到恢复电量且温度正常 60 秒后恢复。手动关闭状态会保留。\n\n合盖运行时若系统热状态「略高」持续 5 分钟，会在屏幕中央弹窗提醒（无提示音，两次至少间隔 30 分钟），并在通知中心留一条记录；可在设置中关闭。\n\n退出 App 或心跳失联后，后台会解除保活（最迟约 30 秒，外加检查间隔）。菜单中的状态来自后台；“未连接”表示当前状态未知。\n\n合盖运行需要持续联网，并应保持通风。程序不控制 AI 会话，也不会自动解决网络中断、授权等待或请求失败。"
         alert.addButton(withTitle: "知道了")
         if let readme = Bundle.main.url(forResource: "README", withExtension: "md") {
             alert.addButton(withTitle: "打开完整说明")

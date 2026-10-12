@@ -23,6 +23,10 @@ final class ThermalAlertControllerTests: XCTestCase {
             if deferCompletions { waiting.append { _ in completion(result) } } else { completion(result) }
         }
     }
+    private final class FakePresenter: AlertPresenting {
+        var presented: [(title: String, body: String)] = []
+        func present(title: String, body: String) { presented.append((title, body)) }
+    }
     private final class Simulation {
         var lid: Bool? = true
         var date = Date()
@@ -32,15 +36,19 @@ final class ThermalAlertControllerTests: XCTestCase {
     private var suite: String!
     private var defaults: UserDefaults!
     private var poster: FakePoster!
+    private var presenter: FakePresenter!
     private var simulation: Simulation!
     private var messages: [(enabled: Bool, text: String)] = []
+    private var scheduled: [(TimeInterval, () -> Void)] = []
 
     override func setUpWithError() throws {
         suite = "local.rl.lidkeep.thermal-alert-tests." + UUID().uuidString
         defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
         poster = FakePoster()
+        presenter = FakePresenter()
         simulation = Simulation()
         messages = []
+        scheduled = []
     }
     override func tearDownWithError() throws {
         drain()
@@ -49,8 +57,10 @@ final class ThermalAlertControllerTests: XCTestCase {
 
     private func makeController() -> ThermalAlertController {
         let environment = simulation!
-        let controller = ThermalAlertController(defaults: defaults, poster: poster, lidReading: { environment.lid },
-                                                uptime: { environment.uptime }, wallClock: { environment.date })
+        let controller = ThermalAlertController(defaults: defaults, poster: poster, presenter: presenter,
+                                                lidReading: { environment.lid },
+                                                uptime: { environment.uptime }, wallClock: { environment.date },
+                                                schedule: { [weak self] delay, work in self?.scheduled.append((delay, work)) })
         controller.onChange = { [weak self] enabled, message in self?.messages.append((enabled, message)) }
         return controller
     }
@@ -92,14 +102,24 @@ final class ThermalAlertControllerTests: XCTestCase {
         controller.start()
         drain()
         tick(controller, 60) { self.status() }
+        XCTAssertEqual(presenter.presented.count, 0, "No reminder before five minutes")
         XCTAssertEqual(poster.posts.count, 0, "No reminder before five minutes")
         tick(controller, 1) { self.status() }
+        XCTAssertEqual(presenter.presented.count, 1)
+        let dialog = try XCTUnwrap(presenter.presented.first)
+        XCTAssertTrue(dialog.title.contains("略高"))
+        XCTAssertTrue(dialog.body.contains("5 分钟"))
+        XCTAssertTrue(dialog.body.contains("提醒时间"))
         XCTAssertEqual(poster.posts.count, 1)
         let post = try XCTUnwrap(poster.posts.first)
         XCTAssertTrue(post.title.contains("略高"))
         XCTAssertTrue(post.body.contains("5 分钟"))
-        XCTAssertTrue(try XCTUnwrap(messages.last).text.contains("上次热状态提醒"))
+        XCTAssertFalse(post.body.contains("提醒时间"), "The notification record has no reminder-time line")
+        let last = try XCTUnwrap(messages.last).text
+        XCTAssertTrue(last.contains("上次热状态提醒"))
+        XCTAssertTrue(last.contains("已弹窗提醒"))
         tick(controller, 120) { self.status() }
+        XCTAssertEqual(presenter.presented.count, 1)
         XCTAssertEqual(poster.posts.count, 1)
     }
 
@@ -116,24 +136,26 @@ final class ThermalAlertControllerTests: XCTestCase {
             drain()
             tick(controller, 80, make)
         }
+        XCTAssertEqual(presenter.presented.count, 0)
         XCTAssertEqual(poster.posts.count, 0)
     }
 
-    func testFailedPostRetriesAfterFiveMinutesThenStops() throws {
-        poster.failures = ["模拟发送失败"]
+    func testFailedNotificationStillShowsDialogWithoutRetry() throws {
+        poster.permission = .denied
+        poster.failures = ["通知权限未开启"]
         let controller = makeController()
         controller.start()
         drain()
         tick(controller, 61) { self.status() }
+        XCTAssertEqual(presenter.presented.count, 1)
         XCTAssertEqual(poster.posts.count, 1)
-        XCTAssertTrue(try XCTUnwrap(messages.last).text.contains("模拟发送失败"))
-        tick(controller, 59) { self.status() }
-        XCTAssertEqual(poster.posts.count, 1, "No retry inside five minutes")
-        tick(controller, 1) { self.status() }
-        XCTAssertEqual(poster.posts.count, 2)
-        XCTAssertTrue(try XCTUnwrap(messages.last).text.contains("上次热状态提醒"))
+        let last = try XCTUnwrap(messages.last).text
+        XCTAssertTrue(last.contains("仍会弹窗提醒"))
+        XCTAssertTrue(last.contains("本次通知中心记录未送达"))
+        XCTAssertTrue(last.contains("上次热状态提醒"))
         tick(controller, 120) { self.status() }
-        XCTAssertEqual(poster.posts.count, 2)
+        XCTAssertEqual(presenter.presented.count, 1, "The dialog already reminded; no retry")
+        XCTAssertEqual(poster.posts.count, 1, "A failed notification record is not retried")
     }
 
     func testDelayedCallbackDoesNotDuplicatePost() throws {
@@ -142,13 +164,18 @@ final class ThermalAlertControllerTests: XCTestCase {
         controller.start()
         drain()
         tick(controller, 61) { self.status() }
+        XCTAssertEqual(presenter.presented.count, 1)
         XCTAssertEqual(poster.posts.count, 1)
+        XCTAssertTrue(try XCTUnwrap(messages.last).text.contains("上次热状态提醒"),
+                      "The dialog counts as the reminder before the notification callback arrives")
         tick(controller, 120) { self.status() }
+        XCTAssertEqual(presenter.presented.count, 1)
         XCTAssertEqual(poster.posts.count, 1, "An in-flight post is not submitted again")
         poster.waiting.removeFirst()(nil)
         drain()
         XCTAssertTrue(try XCTUnwrap(messages.last).text.contains("上次热状态提醒"))
         tick(controller, 120) { self.status() }
+        XCTAssertEqual(presenter.presented.count, 1)
         XCTAssertEqual(poster.posts.count, 1)
     }
 
@@ -162,6 +189,7 @@ final class ThermalAlertControllerTests: XCTestCase {
         XCTAssertFalse(try XCTUnwrap(messages.last).enabled)
         XCTAssertEqual(try XCTUnwrap(messages.last).text, "已关闭热状态提醒。")
         tick(controller, 120) { self.status() }
+        XCTAssertEqual(presenter.presented.count, 0)
         XCTAssertEqual(poster.posts.count, 0)
         let restarted = makeController()
         XCTAssertFalse(restarted.enabled)
@@ -176,6 +204,7 @@ final class ThermalAlertControllerTests: XCTestCase {
         controller.start()
         drain()
         tick(controller, 61) { self.status() }
+        XCTAssertEqual(presenter.presented.count, 1)
         XCTAssertEqual(poster.posts.count, 1)
         let delivered = try XCTUnwrap(defaults.object(forKey: "thermalAlertLastDelivered") as? Date)
         simulation.advance(delivered.addingTimeInterval(60).timeIntervalSince(simulation.date))
@@ -184,6 +213,7 @@ final class ThermalAlertControllerTests: XCTestCase {
         drain()
         XCTAssertTrue(try XCTUnwrap(messages.last).text.contains("上次热状态提醒"))
         tick(soon, 61) { self.status() }
+        XCTAssertEqual(presenter.presented.count, 1, "A restart one minute later keeps the interval")
         XCTAssertEqual(poster.posts.count, 1, "A restart one minute later keeps the interval")
         simulation.advance(delivered.addingTimeInterval(31 * 60).timeIntervalSince(simulation.date))
         let later = makeController()
@@ -191,6 +221,7 @@ final class ThermalAlertControllerTests: XCTestCase {
         drain()
         XCTAssertTrue(try XCTUnwrap(messages.last).text.contains("上次热状态提醒"))
         tick(later, 61) { self.status() }
+        XCTAssertEqual(presenter.presented.count, 2)
         XCTAssertEqual(poster.posts.count, 2)
     }
 
@@ -201,21 +232,45 @@ final class ThermalAlertControllerTests: XCTestCase {
         drain()
         controller.sendTest()
         drain(rounds: 3)
+        XCTAssertEqual(presenter.presented.map(\.title), ["LidKeep 测试提醒"])
         XCTAssertEqual(poster.posts.map(\.title), ["LidKeep 测试通知"])
         XCTAssertNil(defaults.object(forKey: "thermalAlertLastDelivered"), "Test posts are not reminder history")
         simulation.lid = true
         tick(controller, 61) { self.status() }
+        XCTAssertEqual(presenter.presented.map(\.title), ["LidKeep 测试提醒", "合盖运行时系统热状态略高"])
         XCTAssertEqual(poster.posts.map(\.title), ["LidKeep 测试通知", "合盖运行时系统热状态略高"])
         poster.permission = .denied
         controller.sendTest()
         drain(rounds: 3)
+        XCTAssertEqual(presenter.presented.map(\.title),
+                       ["LidKeep 测试提醒", "合盖运行时系统热状态略高", "LidKeep 测试提醒"],
+                       "The test dialog appears even without notification permission")
         XCTAssertEqual(poster.posts.count, 2)
         XCTAssertTrue(try XCTUnwrap(messages.last).text.contains("通知权限未开启"))
         poster.permission = .notDetermined
         poster.grantOnRequest = true
         controller.sendTest()
         drain(rounds: 3)
+        XCTAssertEqual(presenter.presented.map(\.title),
+                       ["LidKeep 测试提醒", "合盖运行时系统热状态略高", "LidKeep 测试提醒", "LidKeep 测试提醒"])
         XCTAssertEqual(poster.authorizationRequests, 2, "Undetermined permission is requested before a test")
         XCTAssertEqual(poster.posts.count, 3)
+    }
+
+    func testDelayedTestSchedulesDialogWithoutTouchingHistory() throws {
+        simulation.lid = false
+        let controller = makeController()
+        controller.start()
+        drain()
+        controller.sendDelayedTest()
+        XCTAssertEqual(scheduled.count, 1)
+        XCTAssertEqual(try XCTUnwrap(scheduled.first).0, 60)
+        XCTAssertEqual(presenter.presented.count, 0, "Nothing appears before the delay")
+        XCTAssertTrue(try XCTUnwrap(messages.last).text.contains("60 秒后弹出测试提醒"))
+        try XCTUnwrap(scheduled.first).1()
+        drain(rounds: 3)
+        XCTAssertEqual(presenter.presented.map(\.title), ["LidKeep 测试提醒"])
+        XCTAssertEqual(poster.posts.map(\.title), ["LidKeep 测试通知"])
+        XCTAssertNil(defaults.object(forKey: "thermalAlertLastDelivered"), "Delayed tests are not reminder history")
     }
 }

@@ -6,22 +6,24 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
     var saveThresholds: ((Double, Double, @escaping (String?) -> Void) -> Void)?
     var thermalAlertChanged: ((Bool) -> Void)?
     var sendTestAlert: (() -> Void)?
+    var sendDelayedTestAlert: (() -> Void)?
     private let stopField = NSTextField(string: "10")
     private let resumeField = NSTextField(string: "20")
     private let loginCheckbox = NSButton(checkboxWithTitle: "登录时启动 LidKeep", target: nil, action: nil)
     private let loginFeedback = NSTextField(wrappingLabelWithString: "")
     private let feedback = NSTextField(wrappingLabelWithString: "")
     private let saveButton = NSButton(title: "保存电量设置", target: nil, action: nil)
-    private let thermalAlertCheckbox = NSButton(checkboxWithTitle: "合盖运行时热状态「略高」持续 5 分钟，发送系统通知",
+    private let thermalAlertCheckbox = NSButton(checkboxWithTitle: "合盖运行时热状态「略高」持续 5 分钟，弹窗提醒",
                                                 target: nil, action: nil)
     private let thermalAlertFeedback = NSTextField(wrappingLabelWithString: "")
-    private let testAlertButton = NSButton(title: "发送测试通知", target: nil, action: nil)
+    private let testAlertButton = NSButton(title: "发送测试提醒", target: nil, action: nil)
+    private let delayedTestAlertButton = NSButton(title: "60 秒后测试（可先合盖）", target: nil, action: nil)
     private var dirty = false
     private var saving = false
     private var connected = false
 
     init() {
-        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 470, height: 540),
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 470, height: 600),
                               styleMask: [.titled, .closable], backing: .buffered, defer: false)
         window.title = "LidKeep 设置"
         window.isReleasedWhenClosed = false
@@ -56,11 +58,16 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         body.addArrangedSubview(thermalAlertCheckbox)
         thermalAlertFeedback.textColor = .secondaryLabelColor
         thermalAlertFeedback.preferredMaxLayoutWidth = 414
-        thermalAlertFeedback.maximumNumberOfLines = 4
+        thermalAlertFeedback.maximumNumberOfLines = 6
         body.addArrangedSubview(thermalAlertFeedback)
         testAlertButton.target = self
         testAlertButton.action = #selector(testAlert)
-        body.addArrangedSubview(testAlertButton)
+        delayedTestAlertButton.target = self
+        delayedTestAlertButton.action = #selector(delayedTestAlert)
+        let alertButtons = NSStackView(views: [testAlertButton, delayedTestAlertButton])
+        alertButtons.orientation = .horizontal
+        alertButtons.spacing = 12
+        body.addArrangedSubview(alertButtons)
         window.contentView!.addSubview(body)
         NSLayoutConstraint.activate([
             body.leadingAnchor.constraint(equalTo: window.contentView!.leadingAnchor, constant: 28),
@@ -140,6 +147,8 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
     @objc private func changeThermalAlert() { thermalAlertChanged?(thermalAlertCheckbox.state == .on) }
 
     @objc private func testAlert() { sendTestAlert?() }
+
+    @objc private func delayedTestAlert() { sendDelayedTestAlert?() }
 
     @objc private func fieldChanged() { dirty = true }
 
